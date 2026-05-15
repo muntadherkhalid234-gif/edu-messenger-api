@@ -1,5 +1,7 @@
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from sqlalchemy import create_engine, Column, String, Boolean, DateTime, Text, ForeignKey
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
 from pydantic import BaseModel
@@ -85,6 +87,29 @@ class FileRecord(Base):
 
 
 Base.metadata.create_all(engine)
+
+
+# --- Seed admin account ---
+def seed_admin():
+    db = SessionLocal()
+    try:
+        existing = db.query(User).filter(User.username == "admin").first()
+        if not existing:
+            admin = User(
+                id=str(int(datetime.utcnow().timestamp() * 1000)),
+                name="المعلم المسؤول",
+                username="admin",
+                password="admin123",
+                role="teacher",
+                is_admin=True,
+                created_at=datetime.utcnow(),
+            )
+            db.add(admin)
+            db.commit()
+    finally:
+        db.close()
+
+seed_admin()
 
 
 # --- Schemas ---
@@ -517,3 +542,16 @@ def _file_dict(f: FileRecord):
         "data": f.data,
         "createdAt": f.created_at.isoformat() if f.created_at else None,
     }
+
+
+# --- Static files (frontend) ---
+STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
+if os.path.isdir(STATIC_DIR):
+    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static_assets")
+
+    @app.get("/{full_path:path}")
+    async def serve_frontend(full_path: str):
+        file_path = os.path.join(STATIC_DIR, full_path)
+        if os.path.isfile(file_path):
+            return FileResponse(file_path)
+        return FileResponse(os.path.join(STATIC_DIR, "index.html"))

@@ -8,8 +8,11 @@ from typing import Optional
 import os
 import json
 
-DB_PATH = os.environ.get("DB_PATH", "/data/edu.db")
-os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+DB_DIR = os.environ.get("DB_DIR", "/data")
+if not os.path.isdir(DB_DIR):
+    DB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+os.makedirs(DB_DIR, exist_ok=True)
+DB_PATH = os.path.join(DB_DIR, "edu.db")
 
 engine = create_engine(f"sqlite:///{DB_PATH}", connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(bind=engine)

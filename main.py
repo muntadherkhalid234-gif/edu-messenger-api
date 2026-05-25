@@ -501,7 +501,7 @@ def delete_teacher(teacher_id: str, db: Session = Depends(get_db)):
     teacher = db.query(User).filter(User.id == teacher_id, User.role == "teacher").first()
     if not teacher:
         raise HTTPException(404, "المعلم غير موجود")
-    if teacher.is_admin:
+    if teacher.username == "admin":
         raise HTTPException(400, "لا يمكن حذف حساب المسؤول")
     db.delete(teacher)
     db.commit()

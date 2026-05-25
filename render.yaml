@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: edu-messenger-api
+    runtime: docker
+    repo: https://github.com/muntadherkhalid234-gif/edu-messenger-api
+    branch: deploy
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    envVars:
+      - key: DB_DIR
+        value: /app/data
